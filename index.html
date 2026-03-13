@@ -421,24 +421,37 @@
         </div>
       </div>
 
-      <div class="news-section" style="margin-top:20px;">
+      <div class="news-section" style="margin-top:20px;" id="hiringSection">
         <div class="news-header" style="display:flex;align-items:center;gap:10px;">
           <h3>채용 공고</h3>
-          <span style="font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;${d.hiring?.is_hiring ? 'background:#dcfce7;color:#16a34a;' : 'background:#f3f4f6;color:#9ca3af;'}">
+          <span id="hiringBadge" style="font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;${d.hiring?.is_hiring ? 'background:#dcfce7;color:#16a34a;' : 'background:#f3f4f6;color:#9ca3af;'}">
             ${d.hiring?.is_hiring ? '● 채용 중' : '● 공고 없음'}
           </span>
         </div>
-        ${d.hiring?.jobs?.length ? `
-          <div class="news-list">
-            ${d.hiring.jobs.map(j => `
-              <a href="${j.url || '#'}" target="_blank" class="news-item">
-                <span class="news-source">채용</span>
-                <span class="news-title">${j.title}</span>
-                <span class="news-arrow">→</span>
-              </a>
-            `).join('')}
+        <div id="jobList">
+          ${d.hiring?.jobs?.length ? `
+            <div class="news-list">
+              ${d.hiring.jobs.map(j => `
+                <a href="${j.url || '#'}" target="_blank" class="news-item">
+                  <span class="news-source">채용</span>
+                  <span class="news-title">${j.title}</span>
+                  <span class="news-arrow">→</span>
+                </a>
+              `).join('')}
+            </div>
+          ` : '<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">현재 검색된 채용 공고가 없습니다</div>'}
+        </div>
+        <div style="padding:12px 16px;border-top:1px solid var(--gray-100);">
+          <div style="display:flex;gap:8px;">
+            <input id="keywordInput" type="text" placeholder="직무 키워드 검색 (예: 기획, 개발, 마케팅)"
+              style="flex:1;padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;outline:none;font-family:inherit;"
+              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'" />
+            <button onclick="searchJobs()" id="jobSearchBtn"
+              style="padding:9px 16px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">
+              검색
+            </button>
           </div>
-        ` : '<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">현재 검색된 채용 공고가 없습니다</div>'}
+        </div>
       </div>
 
       ${d.news?.length ? `
@@ -494,6 +507,52 @@
 
   document.getElementById('companyInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') search();
+  });
+
+  async function searchJobs() {
+    const company = document.getElementById('companyInput').value.trim();
+    const keyword = document.getElementById('keywordInput').value.trim();
+    if (!company) return;
+
+    const btn = document.getElementById('jobSearchBtn');
+    const jobList = document.getElementById('jobList');
+    btn.disabled = true;
+    btn.textContent = '검색 중...';
+    jobList.innerHTML = '<div style="padding:16px 20px;font-size:13px;color:#9ca3af;">검색 중...</div>';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/jobs?company=${encodeURIComponent(company)}&keyword=${encodeURIComponent(keyword)}`);
+      const data = await res.json();
+      const badge = document.getElementById('hiringBadge');
+
+      if (data.jobs?.length) {
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#16a34a';
+        badge.textContent = `● 채용 중`;
+        jobList.innerHTML = `<div class="news-list">${data.jobs.map(j => `
+          <a href="${j.url || '#'}" target="_blank" class="news-item">
+            <span class="news-source">채용</span>
+            <span class="news-title">${j.title}</span>
+            <span class="news-arrow">→</span>
+          </a>`).join('')}</div>`;
+      } else {
+        badge.style.background = '#f3f4f6';
+        badge.style.color = '#9ca3af';
+        badge.textContent = '● 공고 없음';
+        jobList.innerHTML = `<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">${keyword ? `"${keyword}" 관련 채용 공고가 없습니다` : '채용 공고가 없습니다'}</div>`;
+      }
+    } catch (e) {
+      jobList.innerHTML = '<div style="padding:14px 20px;font-size:13px;color:#dc2626;">검색 실패</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '검색';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement === document.getElementById('keywordInput')) {
+      searchJobs();
+    }
   });
 </script>
 

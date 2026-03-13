@@ -265,3 +265,32 @@ async def check_company(company: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/jobs")
+async def search_jobs(company: str, keyword: str = ""):
+    if not company.strip():
+        raise HTTPException(status_code=400, detail="기업명을 입력해주세요")
+    try:
+        query = f'"{company}" {keyword} 채용 공고' if keyword else f'"{company}" 채용 공고 모집'
+        jobs = []
+        seen = set()
+        for r in ddg_text(query, max_results=10):
+            title = r.get("title", "")
+            body = r.get("body", "")
+            url = r.get("href", "")
+            if company not in title and company not in body[:150]:
+                continue
+            if not any(kw in title + body for kw in ["채용", "모집", "공고", "recruit"]):
+                continue
+            if keyword and keyword not in title and keyword not in body[:200]:
+                continue
+            if url in seen:
+                continue
+            seen.add(url)
+            jobs.append({"title": title[:80], "url": url})
+            if len(jobs) >= 8:
+                break
+        return {"company": company, "keyword": keyword, "jobs": jobs, "count": len(jobs)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
