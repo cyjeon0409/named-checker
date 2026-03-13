@@ -195,6 +195,40 @@ async def check_company(company: str):
                 if len(news) >= 5:
                     break
 
+        # ── 채용 공고 ──────────────────────────────────────────
+        hiring = {"is_hiring": False, "jobs": [], "text": "채용 공고 없음"}
+        job_sites = ["wanted.co.kr", "saramin.co.kr", "jobkorea.co.kr", "linkareer.com", "jumpit.co.kr"]
+        seen_urls = set()
+        for r in ddg_text(f'"{company}" 채용 공고 모집', max_results=10):
+            title = r.get("title", "")
+            body = r.get("body", "")
+            url = r.get("href", "")
+            if company not in title and company not in body[:150]:
+                continue
+            if not any(kw in title + body for kw in ["채용", "모집", "공고", "recruit"]):
+                continue
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            hiring["jobs"].append({"title": title[:60], "url": url})
+            if len(hiring["jobs"]) >= 5:
+                break
+
+        if not hiring["jobs"]:
+            for r in ddg_text(f'{company} 채용 site:wanted.co.kr OR site:saramin.co.kr OR site:jobkorea.co.kr', max_results=6):
+                title = r.get("title", "")
+                url = r.get("href", "")
+                if url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                hiring["jobs"].append({"title": title[:60], "url": url})
+                if len(hiring["jobs"]) >= 5:
+                    break
+
+        if hiring["jobs"]:
+            hiring["is_hiring"] = True
+            hiring["text"] = f"채용 공고 {len(hiring['jobs'])}건 발견"
+
         # ── 판정 ──────────────────────────────────────────────
         emp_pass = employee["pass"]
         add_pass = investment["pass"] or revenue["pass"] or conglomerate["pass"]
@@ -223,6 +257,7 @@ async def check_company(company: str):
             "investment": investment,
             "revenue": revenue,
             "conglomerate": conglomerate,
+            "hiring": hiring,
             "news": news,
             "verdict": verdict,
             "reason": reason

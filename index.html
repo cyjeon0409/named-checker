@@ -421,6 +421,26 @@
         </div>
       </div>
 
+      <div class="news-section" style="margin-top:20px;">
+        <div class="news-header" style="display:flex;align-items:center;gap:10px;">
+          <h3>채용 공고</h3>
+          <span style="font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;${d.hiring?.is_hiring ? 'background:#dcfce7;color:#16a34a;' : 'background:#f3f4f6;color:#9ca3af;'}">
+            ${d.hiring?.is_hiring ? '● 채용 중' : '● 공고 없음'}
+          </span>
+        </div>
+        ${d.hiring?.jobs?.length ? `
+          <div class="news-list">
+            ${d.hiring.jobs.map(j => `
+              <a href="${j.url || '#'}" target="_blank" class="news-item">
+                <span class="news-source">채용</span>
+                <span class="news-title">${j.title}</span>
+                <span class="news-arrow">→</span>
+              </a>
+            `).join('')}
+          </div>
+        ` : '<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">현재 검색된 채용 공고가 없습니다</div>'}
+      </div>
+
       ${d.news?.length ? `
         <div class="news-section">
           <div class="news-header"><h3>관련 뉴스 기사</h3></div>
