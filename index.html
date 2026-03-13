@@ -433,7 +433,7 @@
             <div class="news-list">
               ${d.hiring.jobs.map(j => `
                 <a href="${j.url || '#'}" target="_blank" class="news-item">
-                  <span class="news-source">채용</span>
+                  <span class="news-source">${j.source || '채용'}</span>
                   <span class="news-title">${j.title}</span>
                   <span class="news-arrow">→</span>
                 </a>
@@ -531,7 +531,7 @@
         badge.textContent = `● 채용 중`;
         jobList.innerHTML = `<div class="news-list">${data.jobs.map(j => `
           <a href="${j.url || '#'}" target="_blank" class="news-item">
-            <span class="news-source">채용</span>
+            <span class="news-source">${j.source || '채용'}</span>
             <span class="news-title">${j.title}</span>
             <span class="news-arrow">→</span>
           </a>`).join('')}</div>`;

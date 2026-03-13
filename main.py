@@ -47,6 +47,59 @@ def extract_number_eok(text: str):
     return None
 
 
+JOB_SITE_DOMAINS = ["saramin.co.kr", "jobkorea.co.kr", "wanted.co.kr"]
+CAREER_KEYWORDS = ["careers.", "career.", "jobs.", "recruit.", "job.", "채용"]
+
+
+def _is_job_site(url: str) -> tuple[bool, str]:
+    """URL이 채용 사이트이거나 자체 채용 페이지인지 판별. (is_match, label) 반환"""
+    for domain in JOB_SITE_DOMAINS:
+        if domain in url:
+            label = {"saramin.co.kr": "사람인", "jobkorea.co.kr": "잡코리아", "wanted.co.kr": "원티드"}.get(domain, domain)
+            return True, label
+    for kw in CAREER_KEYWORDS:
+        if kw in url:
+            return True, "자체채용"
+    return False, ""
+
+
+def _search_jobs(company: str, keyword: str = "") -> list:
+    seen = set()
+    jobs = []
+
+    # 각 채용 사이트별 직접 검색
+    for site, label in [("saramin.co.kr", "사람인"), ("jobkorea.co.kr", "잡코리아"), ("wanted.co.kr", "원티드")]:
+        q = f'site:{site} {company} {keyword}' if keyword else f'site:{site} {company} 채용'
+        for r in ddg_text(q, max_results=5):
+            url = r.get("href", "")
+            title = r.get("title", "")
+            if url in seen:
+                continue
+            seen.add(url)
+            jobs.append({"title": title[:80], "url": url, "source": label})
+            if len(jobs) >= 8:
+                return jobs
+
+    # 자체 채용 페이지
+    q = f'"{company}" 채용 {keyword}' if keyword else f'"{company}" 채용공고 recruit'
+    for r in ddg_text(q, max_results=8):
+        url = r.get("href", "")
+        title = r.get("title", "")
+        matched, label = _is_job_site(url)
+        if not matched:
+            continue
+        if url in seen:
+            continue
+        if company not in title and company not in r.get("body", "")[:150]:
+            continue
+        seen.add(url)
+        jobs.append({"title": title[:80], "url": url, "source": label})
+        if len(jobs) >= 8:
+            break
+
+    return jobs
+
+
 @app.get("/api/check")
 async def check_company(company: str):
     if not company.strip():
@@ -197,33 +250,7 @@ async def check_company(company: str):
 
         # ── 채용 공고 ──────────────────────────────────────────
         hiring = {"is_hiring": False, "jobs": [], "text": "채용 공고 없음"}
-        job_sites = ["wanted.co.kr", "saramin.co.kr", "jobkorea.co.kr", "linkareer.com", "jumpit.co.kr"]
-        seen_urls = set()
-        for r in ddg_text(f'"{company}" 채용 공고 모집', max_results=10):
-            title = r.get("title", "")
-            body = r.get("body", "")
-            url = r.get("href", "")
-            if company not in title and company not in body[:150]:
-                continue
-            if not any(kw in title + body for kw in ["채용", "모집", "공고", "recruit"]):
-                continue
-            if url in seen_urls:
-                continue
-            seen_urls.add(url)
-            hiring["jobs"].append({"title": title[:60], "url": url})
-            if len(hiring["jobs"]) >= 5:
-                break
-
-        if not hiring["jobs"]:
-            for r in ddg_text(f'{company} 채용 site:wanted.co.kr OR site:saramin.co.kr OR site:jobkorea.co.kr', max_results=6):
-                title = r.get("title", "")
-                url = r.get("href", "")
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
-                hiring["jobs"].append({"title": title[:60], "url": url})
-                if len(hiring["jobs"]) >= 5:
-                    break
+        hiring["jobs"] = _search_jobs(company, keyword="")
 
         if hiring["jobs"]:
             hiring["is_hiring"] = True
@@ -272,25 +299,7 @@ async def search_jobs(company: str, keyword: str = ""):
     if not company.strip():
         raise HTTPException(status_code=400, detail="기업명을 입력해주세요")
     try:
-        query = f'"{company}" {keyword} 채용 공고' if keyword else f'"{company}" 채용 공고 모집'
-        jobs = []
-        seen = set()
-        for r in ddg_text(query, max_results=10):
-            title = r.get("title", "")
-            body = r.get("body", "")
-            url = r.get("href", "")
-            if company not in title and company not in body[:150]:
-                continue
-            if not any(kw in title + body for kw in ["채용", "모집", "공고", "recruit"]):
-                continue
-            if keyword and keyword not in title and keyword not in body[:200]:
-                continue
-            if url in seen:
-                continue
-            seen.add(url)
-            jobs.append({"title": title[:80], "url": url})
-            if len(jobs) >= 8:
-                break
+        jobs = _search_jobs(company, keyword)
         return {"company": company, "keyword": keyword, "jobs": jobs, "count": len(jobs)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
