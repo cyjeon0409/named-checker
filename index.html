@@ -422,28 +422,10 @@
       </div>
 
       <div class="news-section" style="margin-top:20px;" id="hiringSection">
-        <div class="news-header" style="display:flex;align-items:center;gap:10px;">
-          <h3>채용 공고</h3>
-          <span id="hiringBadge" style="font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;${d.hiring?.is_hiring ? 'background:#dcfce7;color:#16a34a;' : 'background:#f3f4f6;color:#9ca3af;'}">
-            ${d.hiring?.is_hiring ? '● 채용 중' : '● 공고 없음'}
-          </span>
-        </div>
-        <div id="jobList">
-          ${d.hiring?.jobs?.length ? `
-            <div class="news-list">
-              ${d.hiring.jobs.map(j => `
-                <a href="${j.url || '#'}" target="_blank" class="news-item">
-                  <span class="news-source">${j.source || '채용'}</span>
-                  <span class="news-title">${j.title}</span>
-                  <span class="news-arrow">→</span>
-                </a>
-              `).join('')}
-            </div>
-          ` : '<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">현재 검색된 채용 공고가 없습니다</div>'}
-        </div>
-        <div style="padding:12px 16px;border-top:1px solid var(--gray-100);">
+        <div class="news-header"><h3>채용 공고 검색</h3></div>
+        <div style="padding:12px 16px;">
           <div style="display:flex;gap:8px;">
-            <input id="keywordInput" type="text" placeholder="직무 키워드 검색 (예: 기획, 개발, 마케팅)"
+            <input id="keywordInput" type="text" placeholder="직무 키워드 입력 (예: 기획, 개발, 마케팅) — 비워두면 전체 검색"
               style="flex:1;padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;outline:none;font-family:inherit;"
               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'" />
             <button onclick="searchJobs()" id="jobSearchBtn"
@@ -452,16 +434,17 @@
             </button>
           </div>
         </div>
+        <div id="jobList"></div>
       </div>
 
       ${d.news?.length ? `
-        <div class="news-section">
-          <div class="news-header"><h3>관련 뉴스 기사</h3></div>
+        <div class="news-section" style="margin-top:20px;">
+          <div class="news-header"><h3>최신 뉴스</h3></div>
           <div class="news-list">
             ${d.news.map(n => `
               <a href="${n.url || '#'}" target="_blank" class="news-item">
                 <span class="news-source">${n.source || '뉴스'}</span>
-                <span class="news-title">${n.title}</span>
+                <span class="news-title">${n.title}${n.date ? ` <span style="font-size:11px;color:#9ca3af;margin-left:4px;">${n.date.slice(0,10)}</span>` : ''}</span>
                 <span class="news-arrow">→</span>
               </a>
             `).join('')}

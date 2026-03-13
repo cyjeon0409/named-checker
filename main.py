@@ -35,10 +35,12 @@ def _is_closed(title: str, body: str = "") -> bool:
     return any(kw in combined for kw in CLOSED_KEYWORDS)
 
 
-def ddg_news(query: str, max_results: int = 5):
+def ddg_news(query: str, max_results: int = 5, timelimit: str = None):
     try:
         with DDGS() as ddgs:
-            return list(ddgs.news(query, max_results=max_results))
+            results = list(ddgs.news(query, max_results=max_results, timelimit=timelimit))
+            results.sort(key=lambda x: x.get("date", ""), reverse=True)
+            return results
     except Exception:
         return []
 
@@ -55,19 +57,22 @@ def extract_number_eok(text: str):
     return None
 
 
-JOB_SITE_DOMAINS = ["saramin.co.kr", "jobkorea.co.kr", "wanted.co.kr"]
-CAREER_KEYWORDS = ["careers.", "career.", "jobs.", "recruit.", "job.", "채용"]
+# 개별 공고 URL 패턴 (회사 소개 페이지 등 제외)
+JOB_POSTING_PATTERNS = {
+    "saramin.co.kr":   ["/zf_user/jobs/relay/view", "rec_idx="],
+    "jobkorea.co.kr":  ["/Recruit/GI_Read/", "/recruit/gi_read/"],
+    "wanted.co.kr":    ["/wd/"],
+}
 
 
-def _is_job_site(url: str) -> tuple[bool, str]:
-    """URL이 채용 사이트이거나 자체 채용 페이지인지 판별. (is_match, label) 반환"""
-    for domain in JOB_SITE_DOMAINS:
-        if domain in url:
+def _is_job_posting(url: str) -> tuple[bool, str]:
+    url_lower = url.lower()
+    for domain, patterns in JOB_POSTING_PATTERNS.items():
+        if domain in url_lower:
             label = {"saramin.co.kr": "사람인", "jobkorea.co.kr": "잡코리아", "wanted.co.kr": "원티드"}.get(domain, domain)
-            return True, label
-    for kw in CAREER_KEYWORDS:
-        if kw in url:
-            return True, "자체채용"
+            if any(p.lower() in url_lower for p in patterns):
+                return True, label
+            return False, ""  # 도메인은 맞지만 공고 URL이 아님
     return False, ""
 
 
@@ -75,41 +80,23 @@ def _search_jobs(company: str, keyword: str = "") -> list:
     seen = set()
     jobs = []
 
-    # 각 채용 사이트별 직접 검색 (최근 3개월 이내)
     for site, label in [("saramin.co.kr", "사람인"), ("jobkorea.co.kr", "잡코리아"), ("wanted.co.kr", "원티드")]:
-        q = f'site:{site} {company} {keyword}' if keyword else f'site:{site} {company} 채용'
-        for r in ddg_text(q, max_results=8, timelimit='m'):
+        q = f'site:{site} {company} {keyword} 채용' if keyword else f'site:{site} {company} 채용공고'
+        for r in ddg_text(q, max_results=10, timelimit='m'):
             url = r.get("href", "")
             title = r.get("title", "")
             body = r.get("body", "")
+            matched, lbl = _is_job_posting(url)
+            if not matched:
+                continue
             if url in seen:
                 continue
             if _is_closed(title, body):
                 continue
             seen.add(url)
-            jobs.append({"title": title[:80], "url": url, "source": label})
+            jobs.append({"title": title[:80], "url": url, "source": lbl})
             if len(jobs) >= 8:
                 return jobs
-
-    # 자체 채용 페이지
-    q = f'"{company}" 채용 {keyword}' if keyword else f'"{company}" 채용공고 recruit'
-    for r in ddg_text(q, max_results=10, timelimit='m'):
-        url = r.get("href", "")
-        title = r.get("title", "")
-        body = r.get("body", "")
-        matched, label = _is_job_site(url)
-        if not matched:
-            continue
-        if url in seen:
-            continue
-        if _is_closed(title, body):
-            continue
-        if company not in title and company not in body[:150]:
-            continue
-        seen.add(url)
-        jobs.append({"title": title[:80], "url": url, "source": label})
-        if len(jobs) >= 8:
-            break
 
     return jobs
 
@@ -236,31 +223,20 @@ async def check_company(company: str):
                     }
                     break
 
-        # ── 뉴스 ──────────────────────────────────────────────
+        # ── 뉴스 (최신순 5개) ─────────────────────────────────
         news = []
-        for r in ddg_news(f'"{company}"', max_results=8):
+        for r in ddg_news(f'"{company}"', max_results=10, timelimit='m'):
             title = r.get("title", "")
             if company not in title and company not in r.get("body", "")[:100]:
                 continue
             news.append({
                 "title": title,
                 "source": r.get("source", ""),
-                "url": r.get("url", "")
+                "url": r.get("url", ""),
+                "date": r.get("date", "")
             })
             if len(news) >= 5:
                 break
-        if not news:
-            for r in ddg_text(f'"{company}" 기업', max_results=6):
-                title = r.get("title", "")
-                if company not in title and company not in r.get("body", "")[:100]:
-                    continue
-                news.append({
-                    "title": title,
-                    "source": "",
-                    "url": r.get("href", "")
-                })
-                if len(news) >= 5:
-                    break
 
         # ── 채용 공고 ──────────────────────────────────────────
         hiring = {"is_hiring": False, "jobs": [], "text": "채용 공고 없음"}
