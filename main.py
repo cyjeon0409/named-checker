@@ -19,12 +19,20 @@ def index():
     return FileResponse(os.path.join(os.path.dirname(__file__), "index.html"))
 
 
-def ddg_text(query: str, max_results: int = 5):
+CLOSED_KEYWORDS = ["마감", "채용완료", "채용 완료", "공고종료", "모집완료", "모집 완료", "접수마감", "접수 마감"]
+
+
+def ddg_text(query: str, max_results: int = 5, timelimit: str = None):
     try:
         with DDGS() as ddgs:
-            return list(ddgs.text(query, max_results=max_results))
+            return list(ddgs.text(query, max_results=max_results, timelimit=timelimit))
     except Exception:
         return []
+
+
+def _is_closed(title: str, body: str = "") -> bool:
+    combined = (title + " " + body[:100]).lower()
+    return any(kw in combined for kw in CLOSED_KEYWORDS)
 
 
 def ddg_news(query: str, max_results: int = 5):
@@ -67,13 +75,16 @@ def _search_jobs(company: str, keyword: str = "") -> list:
     seen = set()
     jobs = []
 
-    # 각 채용 사이트별 직접 검색
+    # 각 채용 사이트별 직접 검색 (최근 3개월 이내)
     for site, label in [("saramin.co.kr", "사람인"), ("jobkorea.co.kr", "잡코리아"), ("wanted.co.kr", "원티드")]:
         q = f'site:{site} {company} {keyword}' if keyword else f'site:{site} {company} 채용'
-        for r in ddg_text(q, max_results=5):
+        for r in ddg_text(q, max_results=8, timelimit='m'):
             url = r.get("href", "")
             title = r.get("title", "")
+            body = r.get("body", "")
             if url in seen:
+                continue
+            if _is_closed(title, body):
                 continue
             seen.add(url)
             jobs.append({"title": title[:80], "url": url, "source": label})
@@ -82,15 +93,18 @@ def _search_jobs(company: str, keyword: str = "") -> list:
 
     # 자체 채용 페이지
     q = f'"{company}" 채용 {keyword}' if keyword else f'"{company}" 채용공고 recruit'
-    for r in ddg_text(q, max_results=8):
+    for r in ddg_text(q, max_results=10, timelimit='m'):
         url = r.get("href", "")
         title = r.get("title", "")
+        body = r.get("body", "")
         matched, label = _is_job_site(url)
         if not matched:
             continue
         if url in seen:
             continue
-        if company not in title and company not in r.get("body", "")[:150]:
+        if _is_closed(title, body):
+            continue
+        if company not in title and company not in body[:150]:
             continue
         seen.add(url)
         jobs.append({"title": title[:80], "url": url, "source": label})
