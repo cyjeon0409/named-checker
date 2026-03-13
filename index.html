@@ -505,13 +505,10 @@
 
     try {
       const res = await fetch(`${API_BASE}/api/jobs?company=${encodeURIComponent(company)}&keyword=${encodeURIComponent(keyword)}`);
+      if (!res.ok) throw new Error('server');
       const data = await res.json();
-      const badge = document.getElementById('hiringBadge');
 
       if (data.jobs?.length) {
-        badge.style.background = '#dcfce7';
-        badge.style.color = '#16a34a';
-        badge.textContent = `● 채용 중`;
         jobList.innerHTML = `<div class="news-list">${data.jobs.map(j => `
           <a href="${j.url || '#'}" target="_blank" class="news-item">
             <span class="news-source">${j.source || '채용'}</span>
@@ -519,13 +516,10 @@
             <span class="news-arrow">→</span>
           </a>`).join('')}</div>`;
       } else {
-        badge.style.background = '#f3f4f6';
-        badge.style.color = '#9ca3af';
-        badge.textContent = '● 공고 없음';
-        jobList.innerHTML = `<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">${keyword ? `"${keyword}" 관련 채용 공고가 없습니다` : '채용 공고가 없습니다'}</div>`;
+        jobList.innerHTML = `<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">${keyword ? `"${keyword}" 관련 채용 공고 검색 결과 없음` : '검색된 채용 공고 없음'}</div>`;
       }
     } catch (e) {
-      jobList.innerHTML = '<div style="padding:14px 20px;font-size:13px;color:#dc2626;">검색 실패</div>';
+      jobList.innerHTML = '<div style="padding:14px 20px;font-size:13px;color:#dc2626;">서버 오류 — 잠시 후 다시 시도해주세요</div>';
     } finally {
       btn.disabled = false;
       btn.textContent = '검색';
