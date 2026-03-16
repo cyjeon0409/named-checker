@@ -82,26 +82,45 @@ def _search_jobs(company: str = "", keyword: str = "") -> list:
 
     for site, label in [("saramin.co.kr", "사람인"), ("jobkorea.co.kr", "잡코리아"), ("wanted.co.kr", "원티드")]:
         if company and keyword:
-            q = f'site:{site} "{company}" {keyword} 채용'
+            # AND 조건: 해당 기업의 해당 직무 공고
+            queries = [
+                f'site:{site} "{company}" {keyword} 채용',
+                f'site:{site} {company} {keyword}',
+            ]
         elif company:
-            q = f'site:{site} "{company}" 채용공고'
+            # 기업명만: 해당 기업 공고 전체
+            queries = [
+                f'site:{site} "{company}" 채용',
+                f'site:{site} {company} 채용공고',
+            ]
         elif keyword:
-            q = f'site:{site} {keyword} 채용공고'
+            # 직무만: 직무 기준 전체 검색
+            queries = [
+                f'site:{site} {keyword} 채용공고',
+                f'site:{site} {keyword} 모집',
+            ]
         else:
             continue
-        for r in ddg_text(q, max_results=10, timelimit='m'):
-            url = r.get("href", "")
-            title = r.get("title", "")
-            body = r.get("body", "")
-            matched, lbl = _is_job_posting(url)
-            if not matched:
-                continue
-            if url in seen:
-                continue
-            if _is_closed(title, body):
-                continue
-            seen.add(url)
-            jobs.append({"title": title[:80], "url": url, "source": lbl})
+
+        for q in queries:
+            for r in ddg_text(q, max_results=10):
+                url = r.get("href", "")
+                title = r.get("title", "")
+                body = r.get("body", "")
+                matched, lbl = _is_job_posting(url)
+                if not matched:
+                    continue
+                if url in seen:
+                    continue
+                if _is_closed(title, body):
+                    continue
+                # company+keyword AND 조건 검증: 제목/본문에 기업명 포함 여부 확인
+                if company and keyword:
+                    combined = (title + " " + body[:200]).lower()
+                    if company.lower() not in combined:
+                        continue
+                seen.add(url)
+                jobs.append({"title": title[:80], "url": url, "source": lbl})
             if len(jobs) >= 8:
                 return jobs
 
