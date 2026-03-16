@@ -562,6 +562,19 @@
         ? `${company}의 "${keyword}" 관련 공고 없음`
         : `"${keyword}" 관련 공고 없음`;
 
+      const searchLinksHtml = data.search_links?.length ? `
+        <div class="list-card" style="margin-top:12px;">
+          <div class="list-card-header"><h3>플랫폼에서 직접 검색</h3></div>
+          <div class="news-list">
+            ${data.search_links.map(l => `
+              <a href="${l.url}" target="_blank" class="news-item">
+                <span class="news-source">${l.label}</span>
+                <span class="news-title">${l.label}에서 검색하기</span>
+                <span class="news-arrow">→</span>
+              </a>`).join('')}
+          </div>
+        </div>` : '';
+
       if (data.jobs?.length) {
         el.innerHTML = `
           <div class="list-card">
@@ -574,13 +587,15 @@
                   <span class="news-arrow">→</span>
                 </a>`).join('')}
             </div>
-          </div>`;
+          </div>
+          ${searchLinksHtml}`;
       } else {
         el.innerHTML = `
           <div class="list-card">
             <div class="list-card-header"><h3>채용 공고</h3></div>
-            <div style="padding:20px;font-size:13px;color:#9ca3af;text-align:center;">${emptyLabel}</div>
-          </div>`;
+            <div style="padding:20px;font-size:13px;color:#9ca3af;text-align:center;">자동 검색 결과 없음 — 아래에서 직접 확인해보세요</div>
+          </div>
+          ${searchLinksHtml}`;
       }
 
       hide('jobLoading');

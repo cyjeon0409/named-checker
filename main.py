@@ -335,7 +335,18 @@ async def search_jobs(company: str = "", keyword: str = ""):
         raise HTTPException(status_code=400, detail="기업명 또는 직무 키워드를 입력해주세요")
     try:
         jobs = _search_jobs(company, keyword)
-        return {"company": company, "keyword": keyword, "jobs": jobs, "count": len(jobs)}
+
+        # 각 플랫폼 검색 링크 생성
+        q_saramin = f"{company} {keyword}".strip()
+        q_jobkorea = f"{company} {keyword}".strip()
+        q_wanted = f"{company} {keyword}".strip()
+        search_links = [
+            {"label": "사람인", "url": f"https://www.saramin.co.kr/zf_user/search/recruit?searchword={q_saramin}"},
+            {"label": "잡코리아", "url": f"https://www.jobkorea.co.kr/Search/?stext={q_jobkorea}"},
+            {"label": "원티드", "url": f"https://www.wanted.co.kr/search?query={q_wanted}&tab=position"},
+        ]
+
+        return {"company": company, "keyword": keyword, "jobs": jobs, "count": len(jobs), "search_links": search_links}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
