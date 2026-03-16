@@ -31,7 +31,7 @@
     header {
       background: white;
       border-bottom: 1px solid var(--gray-200);
-      padding: 20px 0;
+      padding: 20px 0 0;
     }
 
     .container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
@@ -39,6 +39,39 @@
     header p { font-size: 13px; color: var(--gray-600); margin-top: 3px; }
     header .warning { font-size: 11px; color: #dc2626; font-weight: 600; margin-top: 5px; }
 
+    /* Tab nav */
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      margin-top: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-400);
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-btn:hover:not(.active) { color: var(--gray-600); }
+
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Search section */
     .search-section {
       background: white;
       border-bottom: 1px solid var(--gray-200);
@@ -73,9 +106,6 @@
       font-family: inherit;
       white-space: nowrap;
       transition: background 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 7px;
     }
 
     .search-box button:hover:not(:disabled) { background: var(--primary-dark); }
@@ -94,10 +124,7 @@
     .empty-state p { font-size: 13px; line-height: 1.7; }
 
     /* Loading */
-    .loading-state {
-      text-align: center;
-      padding: 60px 20px;
-    }
+    .loading-state { text-align: center; padding: 60px 20px; }
 
     .spinner {
       width: 40px;
@@ -155,7 +182,6 @@
     }
 
     .criteria-body { flex: 1; min-width: 0; }
-
     .criteria-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
     .criteria-label {
@@ -167,31 +193,12 @@
       flex-wrap: wrap;
     }
 
-    .badge-required {
-      font-size: 10px;
-      font-weight: 700;
-      background: #fefce8;
-      color: #854d0e;
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
-
-    .criteria-status {
-      font-size: 12px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
+    .criteria-status { font-size: 12px; font-weight: 700; flex-shrink: 0; }
     .criteria-status.pass { color: var(--success); }
     .criteria-status.fail { color: var(--danger); }
     .criteria-status.unknown { color: var(--gray-400); }
 
-    .criteria-detail {
-      font-size: 12px;
-      color: var(--gray-600);
-      margin-top: 4px;
-      line-height: 1.5;
-    }
+    .criteria-detail { font-size: 12px; color: var(--gray-600); margin-top: 4px; line-height: 1.5; }
 
     .criteria-source {
       display: inline-flex;
@@ -202,7 +209,6 @@
       text-decoration: none;
       margin-top: 4px;
     }
-
     .criteria-source:hover { text-decoration: underline; }
 
     /* OR divider */
@@ -213,15 +219,12 @@
       margin: 4px 0;
       padding: 0 6px;
     }
-
-    .or-divider::before,
-    .or-divider::after {
+    .or-divider::before, .or-divider::after {
       content: '';
       flex: 1;
       height: 1px;
       background: var(--gray-200);
     }
-
     .or-divider span { font-size: 11px; font-weight: 700; color: var(--gray-400); }
 
     /* Verdict */
@@ -235,20 +238,17 @@
       align-items: center;
       gap: 16px;
     }
-
     .verdict-card.named { border-color: var(--success); background: #f0fdf4; }
     .verdict-card.not-named { border-color: var(--danger); background: #fef2f2; }
 
     .verdict-emoji { font-size: 34px; flex-shrink: 0; }
-
     .verdict-title { font-size: 18px; font-weight: 800; }
     .verdict-title.named { color: var(--success); }
     .verdict-title.not-named { color: var(--danger); }
-
     .verdict-reason { font-size: 13px; color: var(--gray-600); margin-top: 4px; line-height: 1.5; }
 
-    /* News */
-    .news-section {
+    /* List card (news / jobs) */
+    .list-card {
       background: white;
       border: 1.5px solid var(--gray-200);
       border-radius: 12px;
@@ -256,12 +256,11 @@
       margin-top: 20px;
     }
 
-    .news-header {
+    .list-card-header {
       padding: 13px 18px;
       border-bottom: 1px solid var(--gray-100);
     }
-
-    .news-header h3 { font-size: 13px; font-weight: 700; }
+    .list-card-header h3 { font-size: 13px; font-weight: 700; }
 
     .news-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 
@@ -275,7 +274,6 @@
       text-decoration: none;
       transition: background 0.15s;
     }
-
     .news-item:hover { background: var(--gray-100); }
 
     .news-source {
@@ -302,9 +300,41 @@
       text-align: center;
       color: var(--danger);
     }
-
     .error-state p { font-size: 14px; font-weight: 600; }
     .error-state small { font-size: 12px; color: var(--gray-600); display: block; margin-top: 4px; }
+
+    /* Job sub-search */
+    .job-keyword-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    .job-keyword-row input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .job-keyword-row input:focus { border-color: var(--primary); }
+    .job-keyword-row button {
+      padding: 9px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .job-keyword-row button:hover:not(:disabled) { background: var(--primary-dark); }
+    .job-keyword-row button:disabled { background: var(--gray-400); cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -314,56 +344,98 @@
     <h1>네임드 기업 판정기</h1>
     <p>KDT 고성과 과정 참여기업 네임드 여부 자동 판정</p>
     <p class="warning">⚠️ 검색 결과 오류 가능성 보유, 자체 판단 필수!</p>
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('verdict')">🏢 기업 판정</button>
+      <button class="tab-btn" onclick="switchTab('jobs')">💼 채용 공고</button>
+    </div>
   </div>
 </header>
 
-<div class="search-section">
-  <div class="container">
-    <div class="search-box">
-      <input type="text" id="companyInput" placeholder="기업명 입력 (예: 쿡앱스, 달바글로벌, 뤼튼)" />
-      <button id="searchBtn" onclick="search()">
-        <span id="btnText">판정하기</span>
-      </button>
+<!-- 기업 판정 페이지 -->
+<div id="page-verdict" class="page active">
+  <div class="search-section">
+    <div class="container">
+      <div class="search-box">
+        <input type="text" id="companyInput" placeholder="기업명 입력 (예: 쿡앱스, 달바글로벌, 뤼튼)" />
+        <button id="searchBtn" onclick="search()"><span id="btnText">판정하기</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="container">
+      <div id="verdictEmpty" class="empty-state">
+        <div class="icon">🏢</div>
+        <h2>기업명을 입력해주세요</h2>
+        <p>임직원 수 · 투자금 · 매출액을 자동으로 조사해<br/>네임드 여부와 근거를 알려드립니다</p>
+      </div>
+      <div id="verdictLoading" class="loading-state" style="display:none;">
+        <div class="spinner"></div>
+        <p>기업 정보를 조사하고 있어요</p>
+        <small>투자 이력, 재무 정보, 뉴스를 검색 중...</small>
+      </div>
+      <div id="verdictError" class="error-state" style="display:none;">
+        <p>조회 실패</p><small id="verdictErrorMsg"></small>
+      </div>
+      <div id="verdictResult" style="display:none;"></div>
     </div>
   </div>
 </div>
 
-<div class="main-content">
-  <div class="container">
-
-    <div id="emptyState" class="empty-state">
-      <div class="icon">🏢</div>
-      <h2>기업명을 입력해주세요</h2>
-      <p>임직원 수 · 투자금 · 매출액을 자동으로 조사해<br/>네임드 여부와 근거를 알려드립니다</p>
+<!-- 채용 공고 페이지 -->
+<div id="page-jobs" class="page">
+  <div class="search-section">
+    <div class="container">
+      <div class="job-keyword-row" style="margin-bottom:8px;">
+        <input type="text" id="jobCompanyInput" placeholder="기업명 입력 (선택)" />
+      </div>
+      <div class="job-keyword-row">
+        <input type="text" id="keywordInput" placeholder="직무 키워드 입력 (선택, 예: 기획, 개발, 마케팅)" />
+        <button id="jobSearchBtn" onclick="searchJobs()"><span id="jobBtnText">채용 검색</span></button>
+      </div>
     </div>
-
-    <div id="loadingState" class="loading-state" style="display:none;">
-      <div class="spinner"></div>
-      <p>기업 정보를 조사하고 있어요</p>
-      <small>투자 이력, 재무 정보, 뉴스를 검색 중...</small>
+  </div>
+  <div class="main-content">
+    <div class="container">
+      <div id="jobEmpty" class="empty-state">
+        <div class="icon">💼</div>
+        <h2>기업명 또는 직무 키워드를 입력해주세요</h2>
+        <p>기업명만 → 해당 기업 전체 공고<br/>직무만 → 직무 기준 전체 검색<br/>둘 다 → 해당 기업의 직무 공고만</p>
+      </div>
+      <div id="jobLoading" class="loading-state" style="display:none;">
+        <div class="spinner"></div>
+        <p>채용 공고를 검색하고 있어요</p>
+      </div>
+      <div id="jobResult" style="display:none;"></div>
     </div>
-
-    <div id="errorState" class="error-state" style="display:none;">
-      <p>조회 실패</p>
-      <small id="errorMsg"></small>
-    </div>
-
-    <div id="resultSection" style="display:none;"></div>
-
   </div>
 </div>
 
 <script>
   const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
 
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', (i === 0) === (tab === 'verdict'));
+    });
+    document.getElementById('page-verdict').classList.toggle('active', tab === 'verdict');
+    document.getElementById('page-jobs').classList.toggle('active', tab === 'jobs');
+  }
+
+  // ── 기업 판정 ──────────────────────────────────────
   async function search() {
     const name = document.getElementById('companyInput').value.trim();
     if (!name) return;
 
-    setLoading(true);
-    hide('emptyState');
-    hide('errorState');
-    hide('resultSection');
+    const btn = document.getElementById('searchBtn');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = true;
+    btnText.textContent = '조사 중...';
+    document.getElementById('companyInput').disabled = true;
+
+    hide('verdictEmpty');
+    hide('verdictError');
+    hide('verdictResult');
+    show('verdictLoading');
 
     try {
       const res = await fetch(`${API_BASE}/api/check?company=${encodeURIComponent(name)}`);
@@ -372,39 +444,43 @@
         throw new Error(err.detail || '서버 오류');
       }
       const data = await res.json();
-      renderResult(data);
+      renderVerdict(data);
     } catch (e) {
-      show('errorState');
-      document.getElementById('errorMsg').textContent = e.message;
+      hide('verdictLoading');
+      show('verdictError');
+      document.getElementById('verdictErrorMsg').textContent = e.message;
     } finally {
-      setLoading(false);
+      btn.disabled = false;
+      btnText.textContent = '판정하기';
+      document.getElementById('companyInput').disabled = false;
     }
   }
 
-  function renderResult(d) {
-    const el = document.getElementById('resultSection');
+  function renderVerdict(d) {
+    hide('verdictLoading');
+    const el = document.getElementById('verdictResult');
 
-    const empPass  = d.employee?.pass;
-    const invPass  = d.investment?.pass;
-    const revPass  = d.revenue?.pass;
-    const conPass  = d.conglomerate?.pass;
+    const empPass = d.employee?.pass;
+    const invPass = d.investment?.pass;
+    const revPass = d.revenue?.pass;
+    const conPass = d.conglomerate?.pass;
 
     el.innerHTML = `
       <div class="section-label">판정 기준 — 아래 중 1개 이상 충족</div>
       <div class="criteria-grid">
-        ${criteriaCard('👥', '임직원 100명 이상', false, empPass,
+        ${criteriaCard('👥', '임직원 100명 이상', empPass,
             d.employee?.text || '확인 불가',
             d.employee?.source, d.employee?.source_url)}
         <div class="or-divider"><span>OR</span></div>
-        ${criteriaCard('💰', '누적 투자금 50억 이상', false, invPass,
+        ${criteriaCard('💰', '누적 투자금 50억 이상', invPass,
             d.investment?.text || '확인 불가',
             d.investment?.source, d.investment?.source_url)}
         <div class="or-divider"><span>OR</span></div>
-        ${criteriaCard('📊', '연매출 100억 이상', false, revPass,
+        ${criteriaCard('📊', '연매출 100억 이상', revPass,
             d.revenue?.text || '확인 불가',
             d.revenue?.source, d.revenue?.source_url)}
         <div class="or-divider"><span>OR</span></div>
-        ${criteriaCard('🏛️', '대기업집단 계열사', false, conPass,
+        ${criteriaCard('🏛️', '대기업집단 계열사', conPass,
             d.conglomerate?.is_member
               ? `공정위 지정 계열사 (${d.conglomerate?.parent || ''})`
               : '해당 없음',
@@ -421,25 +497,9 @@
         </div>
       </div>
 
-      <div class="news-section" style="margin-top:20px;" id="hiringSection">
-        <div class="news-header"><h3>채용 공고 검색</h3></div>
-        <div style="padding:12px 16px;">
-          <div style="display:flex;gap:8px;">
-            <input id="keywordInput" type="text" placeholder="직무 키워드 입력 (예: 기획, 개발, 마케팅) — 비워두면 전체 검색"
-              style="flex:1;padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:13px;outline:none;font-family:inherit;"
-              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'" />
-            <button onclick="searchJobs()" id="jobSearchBtn"
-              style="padding:9px 16px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">
-              검색
-            </button>
-          </div>
-        </div>
-        <div id="jobList"></div>
-      </div>
-
       ${d.news?.length ? `
-        <div class="news-section" style="margin-top:20px;">
-          <div class="news-header"><h3>최신 뉴스</h3></div>
+        <div class="list-card">
+          <div class="list-card-header"><h3>최신 뉴스</h3></div>
           <div class="news-list">
             ${d.news.map(n => `
               <a href="${n.url || '#'}" target="_blank" class="news-item">
@@ -453,10 +513,10 @@
       ` : ''}
     `;
 
-    show('resultSection');
+    show('verdictResult');
   }
 
-  function criteriaCard(icon, label, required, pass, detail, source, sourceUrl) {
+  function criteriaCard(icon, label, pass, detail, source, sourceUrl) {
     const statusClass = pass === true ? 'pass' : pass === false ? 'fail' : 'unknown';
     const statusText  = pass === true ? '✓ 충족' : pass === false ? '✗ 미충족' : '— 확인불가';
     return `
@@ -464,10 +524,7 @@
         <div class="criteria-icon">${icon}</div>
         <div class="criteria-body">
           <div class="criteria-header">
-            <div class="criteria-label">
-              ${label}
-              ${required ? '<span class="badge-required">필수</span>' : ''}
-            </div>
+            <div class="criteria-label">${label}</div>
             <span class="criteria-status ${statusClass}">${statusText}</span>
           </div>
           <div class="criteria-detail">${detail}</div>
@@ -477,12 +534,66 @@
     `;
   }
 
-  function setLoading(on) {
-    document.getElementById('loadingState').style.display = on ? 'block' : 'none';
-    document.getElementById('companyInput').disabled = on;
-    const btn = document.getElementById('searchBtn');
-    btn.disabled = on;
-    document.getElementById('btnText').textContent = on ? '조사 중...' : '판정하기';
+  // ── 채용 공고 ──────────────────────────────────────
+  async function searchJobs() {
+    const company = document.getElementById('jobCompanyInput').value.trim();
+    const keyword = document.getElementById('keywordInput').value.trim();
+    if (!company && !keyword) { alert('기업명 또는 직무 키워드를 입력해주세요'); return; }
+
+    const btn = document.getElementById('jobSearchBtn');
+    const btnText = document.getElementById('jobBtnText');
+    btn.disabled = true;
+    btnText.textContent = '검색 중...';
+
+    hide('jobEmpty');
+    hide('jobResult');
+    show('jobLoading');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/jobs?company=${encodeURIComponent(company)}&keyword=${encodeURIComponent(keyword)}`);
+      if (!res.ok) throw new Error('server');
+      const data = await res.json();
+
+      const el = document.getElementById('jobResult');
+      const headerLabel = company
+        ? `${company} 채용 공고 ${data.jobs.length}건`
+        : `"${keyword}" 채용 공고 ${data.jobs.length}건`;
+      const emptyLabel = company
+        ? `${company}의 "${keyword}" 관련 공고 없음`
+        : `"${keyword}" 관련 공고 없음`;
+
+      if (data.jobs?.length) {
+        el.innerHTML = `
+          <div class="list-card">
+            <div class="list-card-header"><h3>${headerLabel}</h3></div>
+            <div class="news-list">
+              ${data.jobs.map(j => `
+                <a href="${j.url || '#'}" target="_blank" class="news-item">
+                  <span class="news-source">${j.source || '채용'}</span>
+                  <span class="news-title">${j.title}</span>
+                  <span class="news-arrow">→</span>
+                </a>`).join('')}
+            </div>
+          </div>`;
+      } else {
+        el.innerHTML = `
+          <div class="list-card">
+            <div class="list-card-header"><h3>채용 공고</h3></div>
+            <div style="padding:20px;font-size:13px;color:#9ca3af;text-align:center;">${emptyLabel}</div>
+          </div>`;
+      }
+
+      hide('jobLoading');
+      show('jobResult');
+    } catch (e) {
+      hide('jobLoading');
+      const el = document.getElementById('jobResult');
+      el.innerHTML = '<div class="error-state"><p>서버 오류</p><small>잠시 후 다시 시도해주세요</small></div>';
+      show('jobResult');
+    } finally {
+      btn.disabled = false;
+      btnText.textContent = '채용 검색';
+    }
   }
 
   function show(id) { document.getElementById(id).style.display = 'block'; }
@@ -492,44 +603,12 @@
     if (e.key === 'Enter') search();
   });
 
-  async function searchJobs() {
-    const company = document.getElementById('companyInput').value.trim();
-    const keyword = document.getElementById('keywordInput').value.trim();
-    if (!company) return;
+  document.getElementById('jobCompanyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchJobs();
+  });
 
-    const btn = document.getElementById('jobSearchBtn');
-    const jobList = document.getElementById('jobList');
-    btn.disabled = true;
-    btn.textContent = '검색 중...';
-    jobList.innerHTML = '<div style="padding:16px 20px;font-size:13px;color:#9ca3af;">검색 중...</div>';
-
-    try {
-      const res = await fetch(`${API_BASE}/api/jobs?company=${encodeURIComponent(company)}&keyword=${encodeURIComponent(keyword)}`);
-      if (!res.ok) throw new Error('server');
-      const data = await res.json();
-
-      if (data.jobs?.length) {
-        jobList.innerHTML = `<div class="news-list">${data.jobs.map(j => `
-          <a href="${j.url || '#'}" target="_blank" class="news-item">
-            <span class="news-source">${j.source || '채용'}</span>
-            <span class="news-title">${j.title}</span>
-            <span class="news-arrow">→</span>
-          </a>`).join('')}</div>`;
-      } else {
-        jobList.innerHTML = `<div style="padding:14px 20px;font-size:13px;color:#9ca3af;">${keyword ? `"${keyword}" 관련 채용 공고 검색 결과 없음` : '검색된 채용 공고 없음'}</div>`;
-      }
-    } catch (e) {
-      jobList.innerHTML = '<div style="padding:14px 20px;font-size:13px;color:#dc2626;">서버 오류 — 잠시 후 다시 시도해주세요</div>';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '검색';
-    }
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.activeElement === document.getElementById('keywordInput')) {
-      searchJobs();
-    }
+  document.getElementById('keywordInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchJobs();
   });
 </script>
 

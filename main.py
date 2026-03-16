@@ -76,12 +76,19 @@ def _is_job_posting(url: str) -> tuple[bool, str]:
     return False, ""
 
 
-def _search_jobs(company: str, keyword: str = "") -> list:
+def _search_jobs(company: str = "", keyword: str = "") -> list:
     seen = set()
     jobs = []
 
     for site, label in [("saramin.co.kr", "사람인"), ("jobkorea.co.kr", "잡코리아"), ("wanted.co.kr", "원티드")]:
-        q = f'site:{site} {company} {keyword} 채용' if keyword else f'site:{site} {company} 채용공고'
+        if company and keyword:
+            q = f'site:{site} "{company}" {keyword} 채용'
+        elif company:
+            q = f'site:{site} "{company}" 채용공고'
+        elif keyword:
+            q = f'site:{site} {keyword} 채용공고'
+        else:
+            continue
         for r in ddg_text(q, max_results=10, timelimit='m'):
             url = r.get("href", "")
             title = r.get("title", "")
@@ -285,11 +292,20 @@ async def check_company(company: str):
 
 
 @app.get("/api/jobs")
-async def search_jobs(company: str, keyword: str = ""):
-    if not company.strip():
-        raise HTTPException(status_code=400, detail="기업명을 입력해주세요")
+async def search_jobs(company: str = "", keyword: str = ""):
+    if not company.strip() and not keyword.strip():
+        raise HTTPException(status_code=400, detail="기업명 또는 직무 키워드를 입력해주세요")
     try:
         jobs = _search_jobs(company, keyword)
         return {"company": company, "keyword": keyword, "jobs": jobs, "count": len(jobs)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import webbrowser, threading
+    def open_browser():
+        webbrowser.open("http://localhost:8080")
+    threading.Timer(1.5, open_browser).start()
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
