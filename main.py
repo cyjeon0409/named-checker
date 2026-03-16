@@ -116,74 +116,97 @@ async def check_company(company: str):
     try:
         # ── 임직원 ──────────────────────────────────────────────
         employee = {"count": None, "text": "확인 불가", "source": None, "source_url": None, "pass": False}
-        for r in ddg_text(f'"{company}" 임직원 직원 명', max_results=6):
-            title = r.get("title", "")
-            body = r.get("body", "") + " " + title
-            if company not in title and company not in body[:150]:
-                continue
-            match = re.search(r'(\d[\d,]{1,4})\s*명', body)
-            if match:
-                count = int(match.group(1).replace(",", ""))
-                if 10 <= count <= 50000:
-                    employee = {
-                        "count": count,
-                        "text": f"약 {count:,}명",
-                        "source": title[:40],
-                        "source_url": r.get("href", ""),
-                        "pass": count >= 100
-                    }
-                    break
+        emp_queries = [
+            f'"{company}" 임직원 직원 명',
+            f'{company} 직원수 임직원수',
+            f'{company} 기업정보 임직원',
+        ]
+        for q in emp_queries:
+            if employee["count"] is not None:
+                break
+            for r in ddg_text(q, max_results=10):
+                title = r.get("title", "")
+                body = r.get("body", "") + " " + title
+                if company not in title and company not in body[:300]:
+                    continue
+                match = re.search(r'(\d[\d,]{1,4})\s*명', body)
+                if match:
+                    count = int(match.group(1).replace(",", ""))
+                    if 10 <= count <= 50000:
+                        employee = {
+                            "count": count,
+                            "text": f"약 {count:,}명",
+                            "source": title[:40],
+                            "source_url": r.get("href", ""),
+                            "pass": count >= 100
+                        }
+                        break
 
         # ── 투자금 ──────────────────────────────────────────────
         investment = {"amount": None, "text": "확인 불가", "source": None, "source_url": None, "pass": False}
-        for r in ddg_text(f'"{company}" 투자유치 시리즈 펀딩', max_results=6):
-            body = r.get("body", "") + " " + r.get("title", "")
-            # 제목에 회사명 포함 여부 확인 (오탐 방지)
-            title = r.get("title", "")
-            if company not in title and company not in body[:100]:
-                continue
-            # 시리즈 언급 (A~E만 유효)
-            s = re.search(r'시리즈\s*([A-E])\b', body)
-            if s:
+        inv_queries = [
+            f'"{company}" 투자유치 시리즈 펀딩',
+            f'{company} 투자 시리즈',
+            f'{company} 투자유치 억원',
+        ]
+        for q in inv_queries:
+            if investment["pass"]:
+                break
+            for r in ddg_text(q, max_results=10):
+                body = r.get("body", "") + " " + r.get("title", "")
+                title = r.get("title", "")
+                if company not in title and company not in body[:300]:
+                    continue
+                # 시리즈 언급 (A~E만 유효)
+                s = re.search(r'시리즈\s*([A-E])\b', body)
+                if s:
+                    amt = extract_number_eok(body)
+                    investment = {
+                        "amount": amt,
+                        "text": f"시리즈 {s.group(1)} {f'{amt:,}억원' if amt else ''}".strip(),
+                        "source": title[:40],
+                        "source_url": r.get("href", ""),
+                        "pass": True
+                    }
+                    break
                 amt = extract_number_eok(body)
-                investment = {
-                    "amount": amt,
-                    "text": f"시리즈 {s.group(1)} {f'{amt:,}억원' if amt else ''}".strip(),
-                    "source": title[:40],
-                    "source_url": r.get("href", ""),
-                    "pass": True
-                }
-                break
-            amt = extract_number_eok(body)
-            if amt and amt >= 10:
-                investment = {
-                    "amount": amt,
-                    "text": f"누적 {amt:,}억원",
-                    "source": title[:40],
-                    "source_url": r.get("href", ""),
-                    "pass": amt >= 50
-                }
-                break
+                if amt and amt >= 10:
+                    investment = {
+                        "amount": amt,
+                        "text": f"누적 {amt:,}억원",
+                        "source": title[:40],
+                        "source_url": r.get("href", ""),
+                        "pass": amt >= 50
+                    }
+                    break
 
         # ── 매출 ──────────────────────────────────────────────
         revenue = {"amount": None, "text": "확인 불가", "source": None, "source_url": None, "pass": False}
-        for r in ddg_text(f'"{company}" 연매출 매출액 실적 억원', max_results=6):
-            title = r.get("title", "")
-            body = r.get("body", "") + " " + title
-            if company not in title and company not in body[:100]:
-                continue
-            amt = extract_number_eok(body)
-            if amt and amt >= 1:
-                year = re.search(r'(20\d{2})', body)
-                yr = year.group(1) if year else ""
-                revenue = {
-                    "amount": amt,
-                    "text": f"{yr}년 {amt:,}억원" if yr else f"{amt:,}억원",
-                    "source": r.get("title", "")[:40],
-                    "source_url": r.get("href", ""),
-                    "pass": amt >= 100
-                }
+        rev_queries = [
+            f'"{company}" 연매출 매출액 실적 억원',
+            f'{company} 매출액 억원',
+            f'{company} 연간 실적 매출',
+        ]
+        for q in rev_queries:
+            if revenue["amount"] is not None:
                 break
+            for r in ddg_text(q, max_results=10):
+                title = r.get("title", "")
+                body = r.get("body", "") + " " + title
+                if company not in title and company not in body[:300]:
+                    continue
+                amt = extract_number_eok(body)
+                if amt and amt >= 1:
+                    year = re.search(r'(20\d{2})', body)
+                    yr = year.group(1) if year else ""
+                    revenue = {
+                        "amount": amt,
+                        "text": f"{yr}년 {amt:,}억원" if yr else f"{amt:,}억원",
+                        "source": r.get("title", "")[:40],
+                        "source_url": r.get("href", ""),
+                        "pass": amt >= 100
+                    }
+                    break
 
         # ── 대기업 계열사 ───────────────────────────────────────
         # 공정위 상호출자제한 기업집단 주요 계열사 내장 목록
